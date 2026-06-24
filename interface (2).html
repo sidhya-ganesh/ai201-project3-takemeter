@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TakeMeter - r/LoveIslandUSA Classifier</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f0f13; color: #f0eee8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+  h1 { font-size: 2.4rem; font-weight: 800; color: #ff6b9d; margin-bottom: 6px; }
+  .sub { color: #888; font-size: 0.9rem; margin-bottom: 32px; }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #ff6b9d; margin-bottom: 10px; text-align: center; }
+  .legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 620px; width: 100%; margin-bottom: 24px; }
+  .leg { background: #1a1a22; border: 1px solid #2a2a35; border-radius: 12px; padding: 12px; }
+  .leg-name { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .leg-def { font-size: 12px; color: #666; line-height: 1.4; }
+  .n-analysis { color: #60b4ff; } .n-hot_take { color: #ff6b9d; } .n-reaction { color: #7ddd6b; }
+  .card { background: #1a1a22; border: 1px solid #2a2a35; border-radius: 16px; padding: 24px; width: 100%; max-width: 620px; margin-bottom: 16px; }
+  textarea { width: 100%; background: #0f0f13; border: 1px solid #2a2a35; border-radius: 10px; color: #f0eee8; font-size: 0.9rem; font-family: inherit; line-height: 1.6; padding: 12px 14px; resize: vertical; min-height: 110px; outline: none; }
+  textarea:focus { border-color: #ff6b9d; }
+  textarea::placeholder { color: #444; }
+  .key-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .key-row input { flex: 1; background: #0f0f13; border: 1px solid #2a2a35; border-radius: 8px; color: #f0eee8; font-size: 0.85rem; padding: 9px 12px; outline: none; font-family: monospace; }
+  .key-row input:focus { border-color: #ff6b9d; }
+  .key-row input::placeholder { color: #444; }
+  button { padding: 11px 20px; background: #ff6b9d; border: none; border-radius: 8px; color: white; font-size: 0.9rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .classify-btn { width: 100%; margin-top: 12px; padding: 13px; font-size: 1rem; border-radius: 10px; }
+  .result { display: none; background: #1a1a22; border: 1px solid #2a2a35; border-radius: 16px; padding: 24px; width: 100%; max-width: 620px; margin-bottom: 16px; }
+  .rlabel { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+  .badge { display: inline-block; padding: 5px 16px; border-radius: 999px; font-size: 0.9rem; font-weight: 700; margin-bottom: 18px; }
+  .b-analysis { background: #1a3a5c; color: #60b4ff; }
+  .b-hot_take { background: #3a1a2a; color: #ff6b9d; }
+  .b-reaction { background: #1a3a1a; color: #7ddd6b; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-lbl { font-size: 12px; color: #888; width: 75px; flex-shrink: 0; }
+  .bar-bg { flex: 1; height: 7px; background: #0f0f13; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .f-analysis { background: #60b4ff; } .f-hot_take { background: #ff6b9d; } .f-reaction { background: #7ddd6b; }
+  .bar-pct { font-size: 12px; color: #aaa; width: 34px; text-align: right; flex-shrink: 0; }
+  .defbox { margin-top: 16px; padding: 11px 13px; background: #0f0f13; border-radius: 8px; border-left: 3px solid #333; font-size: 13px; color: #999; line-height: 1.5; }
+  .err { display: none; color: #ff6b6b; font-size: 13px; margin-top: 8px; }
+  footer { color: #444; font-size: 11px; margin-top: 8px; text-align: center; }
+  .hint { font-size: 12px; color: #555; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">AI201 Project 3</div>
+<h1>TakeMeter</h1>
+<p class="sub">Classify r/LoveIslandUSA posts: analysis, hot take, or reaction</p>
+
+<div class="legend">
+  <div class="leg"><div class="leg-name n-analysis">Analysis</div><div class="leg-def">Structured argument backed by specific evidence</div></div>
+  <div class="leg"><div class="leg-name n-hot_take">Hot Take</div><div class="leg-def">Bold opinion stated without supporting evidence</div></div>
+  <div class="leg"><div class="leg-name n-reaction">Reaction</div><div class="leg-def">Immediate emotional response to an episode moment</div></div>
+</div>
+
+<div class="card">
+  <textarea id="post" placeholder="Paste a r/LoveIslandUSA post or comment here..."></textarea>
+  <div class="key-row">
+    <input type="password" id="apiKey" placeholder="Paste your Anthropic API key (sk-ant-...)"/>
+    <button onclick="classify()">Classify</button>
+  </div>
+  <p class="hint">Your key is never stored or sent anywhere except directly to api.anthropic.com</p>
+  <p class="err" id="err"></p>
+</div>
+
+<div class="result" id="result">
+  <div class="rlabel">Predicted label</div>
+  <div id="badge" class="badge"></div>
+  <div class="rlabel">Confidence</div>
+  <div id="bars"></div>
+  <div class="defbox" id="def"></div>
+</div>
+
+<footer>Built with DistilBERT fine-tuned on 182 r/LoveIslandUSA posts &bull; AI201 S2026</footer>
+
+<script>
+const DEFS = {
+  analysis: "Makes a structured observation backed by specific evidence - editing patterns, timelines, contestant behavior over multiple episodes, or production decisions.",
+  hot_take: "A bold, confident opinion stated without supporting evidence. Asserts rather than argues. Includes vibe/identity posts with no structured argument.",
+  reaction: "An immediate emotional response to a specific episode moment. Little to no argument - expressing a feeling in the moment."
+};
+
+const SYSTEM = `You are classifying posts from r/LoveIslandUSA.
+
+analysis: Structured observation backed by specific evidence - editing patterns, timelines, multi-episode behavior, production decisions. Claim is supported not just stated.
+hot_take: Bold confident opinion without supporting evidence. Asserts rather than argues. Includes vibe/identity posts with no argument.
+reaction: Immediate emotional response to a specific episode moment. Little to no argument.
+
+Respond ONLY with valid JSON, no other text:
+{"label":"hot_take","confidence":{"analysis":0.10,"hot_take":0.75,"reaction":0.15}}
+
+Valid labels: analysis, hot_take, reaction. Scores must sum to 1.0.`;
+
+async function classify() {
+  const text = document.getElementById('post').value.trim();
+  const key = document.getElementById('apiKey').value.trim();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  if (!text) { err.textContent = 'Please enter a post.'; err.style.display = 'block'; return; }
+  if (!key.startsWith('sk-ant-')) { err.textContent = 'Please enter a valid Anthropic API key (starts with sk-ant-).'; err.style.display = 'block'; return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Classifying...';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-client-side-allow-unsafe': 'true' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, system: SYSTEM, messages: [{ role: 'user', content: text }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const parsed = JSON.parse(data.content[0].text.trim());
+    showResult(parsed.label, parsed.confidence);
+  } catch(e) {
+    err.textContent = 'Error: ' + (e.message || 'Check your API key and try again.');
+    err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Classify';
+}
+
+function showResult(label, conf) {
+  document.getElementById('result').style.display = 'block';
+  const b = document.getElementById('badge');
+  b.textContent = label.replace('_',' ');
+  b.className = 'badge b-' + label;
+  document.getElementById('bars').innerHTML = ['analysis','hot_take','reaction'].map(l => {
+    const p = Math.round((conf[l]||0)*100);
+    return `<div class="bar-row"><span class="bar-lbl">${l.replace('_',' ')}</span><div class="bar-bg"><div class="bar-fill f-${l}" style="width:${p}%"></div></div><span class="bar-pct">${p}%</span></div>`;
+  }).join('');
+  document.getElementById('def').textContent = DEFS[label];
+  document.getElementById('result').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+document.getElementById('post').addEventListener('keydown', e => { if (e.key==='Enter' && (e.metaKey||e.ctrlKey)) classify(); });
+</script>
+</body>
+</html>
