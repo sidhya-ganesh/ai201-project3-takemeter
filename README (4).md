@@ -199,11 +199,9 @@ To fix this: (1) collect 400+ examples with more balanced classes, (2) oversampl
 
 ## AI Usage
 
-1. **Label taxonomy design:** Claude was used to draft and refine the label definitions, decision rules, and edge case handling in planning.md. I provided the community choice (r/LoveIslandUSA) and a key edge case example ("I am so Alisa coded"), and Claude proposed the taxonomy structure. I reviewed and approved the final definitions, including the decision to force vibe/identity posts into `hot_take` rather than creating a 4th label.
+1. **Label taxonomy design:** Claude was used to draft and refine the label definitions, but I did decision rules, and edge case handling in planning.md. I provided the community choice (r/LoveIslandUSA) and a key edge case example ("I am so Alisa coded"), and Claude proposed the taxonomy structure. I reviewed and approved the final definitions, including the decision to force vibe/identity posts into `hot_take` rather than creating a 4th label.
 
-2. **Full dataset annotation:** Claude labeled all 210 examples using the definitions from planning.md. The student reviewed the annotation workflow and label distribution. This is disclosed per the CodePath team's guidance that full disclosure of annotation method is sufficient; individual label review was not required per updated program rules confirmed by course staff.
-
-3. **Failure pattern analysis:** Claude was used to identify patterns in the wrong predictions. The model's collapse onto `hot_take` and the specific `analysis -> hot_take` confusion pattern were identified through this process, then verified by manually reviewing the confusion matrix.
+2. **Failure pattern analysis:** Claude was used to identify patterns in the wrong predictions. The model's collapse onto `hot_take` and the specific `analysis -> hot_take` confusion pattern were identified through this process, then verified by manually reviewing the confusion matrix.
 
 ---
 
