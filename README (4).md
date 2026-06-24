@@ -4,6 +4,8 @@ A fine-tuned text classifier that categorizes posts from r/LoveIslandUSA into th
 
 ---
 
+Results summary: Zero-shot Groq baseline: 50.0% accuracy. Fine-tuned DistilBERT: 43.8% accuracy. The fine-tuned model collapsed onto hot_take (predicted 0 reaction examples, missed most analysis). See full evaluation report below.
+
 ## Community Choice
 
 **r/LoveIslandUSA** is a Reddit community for the Peacock reality dating show Love Island USA (865K members). It's a strong fit for this classification task because its discourse is genuinely varied in quality and intent: some posts carefully analyze editing patterns, contestant behavior, or production decisions across multiple episodes; others throw out bold unsupported opinions; and many are pure in-the-moment emotional reactions to specific episode events. These distinctions are ones that community members actively recognize - an analysis post generates debate, a hot take generates pushback, and a reaction post generates solidarity. This variance makes the classification task meaningful rather than arbitrary.
